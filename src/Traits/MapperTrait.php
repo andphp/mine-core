@@ -345,7 +345,10 @@ trait MapperTrait
      */
     public function recovery(array $ids): bool
     {
-        $this->model::withTrashed()->whereIn((new $this->model())->getKeyName(), $ids)->restore();
+        foreach ($ids as $id) {
+            $model = $this->model::withTrashed()->find($id);
+            $model && $model->restore();
+        }
         return true;
     }
 
@@ -354,7 +357,9 @@ trait MapperTrait
      */
     public function disable(array $ids, string $field = 'status'): bool
     {
-        $this->model::query()->whereIn((new $this->model())->getKeyName(), $ids)->update([$field => $this->model::DISABLE]);
+        foreach ($ids as $id) {
+            $this->model::query()->where((new $this->model)->getKeyName(), $id)->update([$field => $this->model::DISABLE]);
+        }
         return true;
     }
 
@@ -363,7 +368,9 @@ trait MapperTrait
      */
     public function enable(array $ids, string $field = 'status'): bool
     {
-        $this->model::query()->whereIn((new $this->model())->getKeyName(), $ids)->update([$field => $this->model::ENABLE]);
+        foreach ($ids as $id) {
+            $this->model::query()->where((new $this->model)->getKeyName(), $id)->update([$field => $this->model::ENABLE]);
+        }
         return true;
     }
 
