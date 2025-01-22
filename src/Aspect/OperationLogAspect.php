@@ -21,6 +21,7 @@ use Mine\Annotation\Permission;
 use Mine\Event\Operation;
 use Mine\Helper\Ip2region;
 use Mine\Helper\LoginUser;
+use Mine\Helper\Str;
 use Mine\Interfaces\ServiceInterface\MenuServiceInterface;
 use Mine\MineRequest;
 use Psr\Container\ContainerExceptionInterface;
@@ -88,13 +89,21 @@ class OperationLogAspect extends AbstractAspect
         $request = $this->container->get(MineRequest::class);
         $loginUser = $this->container->get(LoginUser::class);
 
+        $ip = $request->ip();
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            // echo "$ip 是一个有效的IPv4地址";
+            $ipLocation = $this->ip2region->search($ip);
+        } else {
+            // echo "$ip 不是一个有效的IPv4地址";
+            $ipLocation = '--';
+        }
         $operationLog = [
             'time' => date('Y-m-d H:i:s', $request->getServerParams()['request_time']),
             'method' => $request->getServerParams()['request_method'],
             'router' => $request->getServerParams()['path_info'],
             'protocol' => $request->getServerParams()['server_protocol'],
-            'ip' => $request->ip(),
-            'ip_location' => $this->ip2region->search($request->ip()),
+            'ip' => $ip,
+            'ip_location' => $ipLocation,
             'service_name' => $data['name'] ?: $this->getOperationMenuName($data['code']),
             'request_data' => $request->all(),
             'response_code' => $data['response_code'],
